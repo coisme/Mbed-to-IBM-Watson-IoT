@@ -73,7 +73,7 @@ int main(int argc, char* argv[])
     DigitalOut led_green(LED_GREEN, LED_OFF);
     DigitalOut led_blue(LED_BLUE, LED_OFF);
 
-    printf("Mbed to Azure IoT Hub: version is %.2f\r\n", version);
+    printf("Mbed to Watson IoT : version is %.2f\r\n", version);
     printf("\r\n");
 
     // Turns on green LED to indicate processing initialization process
@@ -90,12 +90,14 @@ int main(int argc, char* argv[])
     printf("Network interface opened successfully.\r\n");
     printf("\r\n");
 
+    std::string hostname = std::string(ORG_ID) + ".messaging.internetofthings.ibmcloud.com";
+
     /* Establish a network connection. */
     MQTTNetwork* mqttNetwork = NULL;
-    printf("Connecting to host %s:%d ...\r\n", MQTT_SERVER_HOST_NAME, MQTT_SERVER_PORT);
+    printf("Connecting to host %s:%d ...\r\n", hostname.c_str(), MQTT_SERVER_PORT);
     {
         mqttNetwork = new MQTTNetwork(network);
-        int rc = mqttNetwork->connect(MQTT_SERVER_HOST_NAME, MQTT_SERVER_PORT, SSL_CA_PEM,
+        int rc = mqttNetwork->connect(hostname.c_str(), MQTT_SERVER_PORT, SSL_CA_PEM,
                 SSL_CLIENT_CERT_PEM, SSL_CLIENT_PRIVATE_KEY_PEM);
         if (rc != MQTT::SUCCESS){
             printf("ERROR: rc from TCP connect is %d\r\n", rc);
@@ -105,8 +107,9 @@ int main(int argc, char* argv[])
     printf("Connection established.\r\n");
     printf("\r\n");
 
-    // Generate username from host name and client id.
-    std::string username = std::string(MQTT_SERVER_HOST_NAME) + "/" + DEVICE_ID + "/api-version=2016-11-14";
+    const char* username = "use-token-auth";
+    std::string cid = std::string("d:") + ORG_ID + ":" + DEVICE_TYPE + ":" + DEVICE_ID;
+
 
     /* Establish a MQTT connection. */
     MQTT::Client<MQTTNetwork, Countdown, MQTT_MAX_PACKET_SIZE, MQTT_MAX_CONNECTIONS>* mqttClient = NULL;
@@ -114,9 +117,9 @@ int main(int argc, char* argv[])
     {
         MQTTPacket_connectData data = MQTTPacket_connectData_initializer;
         data.MQTTVersion = 4; // 3 = 3.1 4 = 3.1.1
-        data.clientID.cstring = (char*)DEVICE_ID;
-        data.username.cstring = (char*)username.c_str();
-        data.password.cstring = (char *)"ignored";
+        data.clientID.cstring = (char*)cid.c_str();
+        data.username.cstring = (char*)username;
+        data.password.cstring = (char *)TOKEN;
 
         mqttClient = new MQTT::Client<MQTTNetwork, Countdown, MQTT_MAX_PACKET_SIZE, MQTT_MAX_CONNECTIONS>(*mqttNetwork);
         int rc = mqttClient->connect(data);
@@ -131,26 +134,21 @@ int main(int argc, char* argv[])
     // Network initialization done. Turn off the green LED
     led_green = LED_OFF;
 
-
-    // Generates topic names from user's setting in MQTT_server_setting.h
-    //devices/{device_id}/messages/events/
-    std::string mqtt_topic_pub = 
-            std::string("devices/") + DEVICE_ID + "/messages/events/";
-    std::string mqtt_topic_sub =
-            std::string("devices/") + DEVICE_ID + "/messages/devicebound/#";
+    const char* mqtt_topic_pub = "iot-2/evt/start/fmt/text";
+    const char* mqtt_topic_sub = "iot-2/cmd/myevt/fmt/text";
 
     /* Subscribe a topic. */
     bool isSubscribed = false;
-    printf("Client is trying to subscribe a topic \"%s\".\r\n", mqtt_topic_sub.c_str());
+    printf("Client is trying to subscribe a topic \"%s\".\r\n", mqtt_topic_sub);
     {
-        int rc = mqttClient->subscribe(mqtt_topic_sub.c_str(), MQTT::QOS0, handleMqttMessage);
+        int rc = mqttClient->subscribe(mqtt_topic_sub, MQTT::QOS0, handleMqttMessage);
         if (rc != MQTT::SUCCESS) {
             printf("ERROR: rc from MQTT subscribe is %d\r\n", rc);
             return -1;
         }
         isSubscribed = true;
     }
-    printf("Client has subscribed a topic \"%s\".\r\n", mqtt_topic_sub.c_str());
+    printf("Client has subscribed a topic \"%s\".\r\n", mqtt_topic_sub);
     printf("\r\n");
 
     // Enable button 1 for publishing a message.
@@ -196,8 +194,8 @@ int main(int argc, char* argv[])
             message.id = id++;
             message.payloadlen = strlen(buf);
             // Publish a message.
-            printf("\r\nPublishing message to the topic %s:\r\n%s\r\n", mqtt_topic_pub.c_str(), buf);
-            int rc = mqttClient->publish(mqtt_topic_pub.c_str(), message);
+            printf("\r\nPublishing message to the topic %s:\r\n%s\r\n", mqtt_topic_pub, buf);
+            int rc = mqttClient->publish(mqtt_topic_pub, message);
             if(rc != MQTT::SUCCESS) {
                 printf("ERROR: rc from MQTT publish is %d\r\n", rc);
             }
@@ -213,8 +211,8 @@ int main(int argc, char* argv[])
 
     if(mqttClient) {
         if(isSubscribed) {
-            mqttClient->unsubscribe(mqtt_topic_sub.c_str());
-            mqttClient->setMessageHandler(mqtt_topic_sub.c_str(), 0);
+            mqttClient->unsubscribe(mqtt_topic_sub);
+            mqttClient->setMessageHandler(mqtt_topic_sub, 0);
         }
         if(mqttClient->isConnected()) 
             mqttClient->disconnect();
