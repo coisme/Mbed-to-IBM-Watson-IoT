@@ -135,7 +135,9 @@ int main(int argc, char* argv[])
 
     // sync the real time clock (RTC)
     NTPClient ntp(network);
-    ntp.set_server("time.google.com", 123);
+    const char* serverAddress = "time.google.com";
+    int port = 123;
+    ntp.set_server(const_cast<char *>(serverAddress), port);
     time_t now = ntp.get_timestamp();
     set_time(now);
     printf("Time is now %s", ctime(&now));
@@ -183,8 +185,8 @@ int main(int argc, char* argv[])
     {
         MQTTPacket_connectData data = MQTTPacket_connectData_initializer;
         data.MQTTVersion = 4; // 3 = 3.1 4 = 3.1.1
-        data.clientID.cstring = (char*)cid.c_str();
-        data.username.cstring = (char*)username;
+        data.clientID.cstring = (char *)cid.c_str();
+        data.username.cstring = (char *)username;
         data.password.cstring = (char *)TOKEN;
 
         mqttClient = new MQTT::Client<MQTTNetwork, Countdown, MQTT_MAX_PACKET_SIZE, MQTT_MAX_CONNECTIONS>(*mqttNetwork);
@@ -201,8 +203,9 @@ int main(int argc, char* argv[])
     // Network initialization done. Turn off the green LED
     led_green = LED_OFF;
 
-    const char* mqtt_topic_pub = "iot-2/evt/start/fmt/text";
-    const char* mqtt_topic_sub = "iot-2/cmd/myevt/fmt/text";
+    // Corrected from testing observations.
+    const char* mqtt_topic_pub = "iot-2/evt/myevt/fmt/text";
+    const char* mqtt_topic_sub = "iot-2/cmd/mycmd/fmt/text";
 
     // Subscribe a topic.
     bool isSubscribed = false;
@@ -220,8 +223,8 @@ int main(int argc, char* argv[])
     printf("\r\n");
 
     // Enable button 1 for publishing a message.
-    InterruptIn btn1 = InterruptIn(BUTTON1);
-    btn1.rise(handleButtonRise);
+    InterruptIn btn1(BUTTON1);
+    btn1.rise(&handleButtonRise);
     
     printf("To send a packet, push the button 1 on your board.\r\n");
 
@@ -263,12 +266,12 @@ int main(int argc, char* argv[])
 
             const size_t len = 128;
             char buf[len];
-            snprintf(buf, len, "Message #%d from %s.", count, DEVICE_ID);
-            message.payload = (void*)buf;
+            size_t actualLength = snprintf(buf, len, "Message #%d from %s.", count, DEVICE_ID);
 
+            message.payload = (void*)buf;
             message.qos = MQTT::QOS0;
             message.id = id++;
-            message.payloadlen = strlen(buf);
+            message.payloadlen = actualLength + 1; // Include the null terminator for safety and robustness.
             
 	    // Publish a message.
             printf("\r\nPublishing message to the topic %s:\r\n%s\r\n", mqtt_topic_pub, buf);
