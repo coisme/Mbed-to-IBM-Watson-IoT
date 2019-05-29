@@ -140,14 +140,15 @@ int main(int argc, char* argv[])
 
     printf("Opening network interface...\r\n");
     {
-        network = NetworkInterface::get_default_instance();
+        network = NetworkInterface::get_default_instance();    // If true, prints out connection details.
         if (!network) {
             printf("Unable to open network interface.\r\n");
             return -1;
         }
-        network->connect();
-        const char *ip = network->get_ip_address();
-        printf("IP address: %s\n", ip ? ip : "None");
+        nsapi_error_t net_status = NSAPI_ERROR_NO_CONNECTION;
+        while ((net_status = network->connect()) != NSAPI_ERROR_OK) {
+            printf("Unable to connect to network (%d). Retrying...\r\n", net_status);
+        }
     }
     printf("Network interface opened successfully.\r\n");
     printf("\r\n");

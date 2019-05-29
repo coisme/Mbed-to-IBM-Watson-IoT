@@ -32,7 +32,8 @@ public:
     }
 
     int connect(const char* hostname, int port, const char *ssl_ca_pem = NULL,
-            const char *ssl_cli_pem = NULL, const char *ssl_pk_pem = NULL) {        
+            const char *ssl_cli_pem = NULL, const char *ssl_pk_pem = NULL) {
+	socket->open(network);
         socket->set_root_ca_cert(ssl_ca_pem);
         socket->set_client_cert_key(ssl_cli_pem, ssl_pk_pem);
         socket->open(network);
