@@ -20,7 +20,8 @@
             "nsapi.default-cellular-plmn"       : 0,
             "nsapi.default-cellular-apn"        : "\"soracom.io\"",
             "nsapi.default-cellular-username"   : "\"sora\"",
-            "nsapi.default-cellular-password"   : "\"sora\""
+            "nsapi.default-cellular-password"   : "\"sora\"",
+            "mbed-mqtt.max-packet-size"         : "1024"
         },
         "WIO_3G": {
             "target.device_has_remove"          : ["SERIAL_FC"],
