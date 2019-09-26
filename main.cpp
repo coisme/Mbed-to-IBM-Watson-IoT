@@ -61,19 +61,26 @@ char messageBuffer[MESSAGE_BUFFER_SIZE];
 void handleMqttMessage(MQTT::MessageData& md);
 void handleButtonRise();
 
+#if defined(TARGET_WIO_3G) || defined(TARGET_WIO_BG96)
+DigitalOut GrovePower(GRO_POWR, 1);
+#undef BUTTON1
+#define BUTTON1 D20
+#endif
+
 InterruptIn btn1(BUTTON1);
 
 int main(int argc, char* argv[])
 {
+    wait_ms(500);
     mbed_trace_init();
     
     const float version = 0.1;
 
     NetworkInterface* network = NULL;
 
-    DigitalOut led_red(LED_RED, LED_OFF);
-    DigitalOut led_green(LED_GREEN, LED_OFF);
-    DigitalOut led_blue(LED_BLUE, LED_OFF);
+    DigitalOut led_red(LED1, LED_OFF);
+    DigitalOut led_green(LED2, LED_OFF);
+    DigitalOut led_blue(LED3, LED_OFF);
 
     printf("Mbed to Watson IoT : version is %.2f\r\n", version);
     printf("\r\n");
@@ -83,7 +90,6 @@ int main(int argc, char* argv[])
 
     printf("Opening network interface...\r\n");
     {
-        //network = easy_connect(true);    // If true, prints out connection details.
         network = NetworkInterface::get_default_instance();
         if (!network) {
             printf("Unable to open network interface.\r\n");
@@ -91,11 +97,7 @@ int main(int argc, char* argv[])
         }
         network->connect();
         const char *ip = network->get_ip_address();
-        const char *netmask = network->get_netmask();
-        const char *gateway = network->get_gateway();
         printf("IP address: %s\n", ip ? ip : "None");
-        printf("Netmask: %s\n", netmask ? netmask : "None");
-        printf("Gateway: %s\n", gateway ? gateway : "None");
     }
     printf("Network interface opened successfully.\r\n");
     printf("\r\n");
