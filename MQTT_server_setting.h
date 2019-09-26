@@ -43,6 +43,8 @@ const char* SSL_CA_PEM =
 "c+LJMto4JQtV05od8GiG7S5BNO98pVAdvzr508EIDObtHopYJeS4d60tbvVS3bR0\n"
 "j6tJLp07kzQoH3jOlOrHvdPJbRzeXDLz\n"
 "-----END CERTIFICATE-----\n"
+"\n";
+#if 0
 "-----BEGIN CERTIFICATE-----\n"
 "MIIDrzCCApegAwIBAgIQCDvgVpBCRrGhdWrJWZHHSjANBgkqhkiG9w0BAQUFADBh\n"
 "MQswCQYDVQQGEwJVUzEVMBMGA1UEChMMRGlnaUNlcnQgSW5jMRkwFwYDVQQLExB3\n"
@@ -66,7 +68,7 @@ const char* SSL_CA_PEM =
 "CAUw7C29C79Fv1C5qfPrmAESrciIxpg0X40KPMbp1ZWVbd4=\n"
 "-----END CERTIFICATE-----\n"
 "\n";
-
+#endif
 
 /*
  * (optional) Client certificate here in PEM format.

@@ -28,7 +28,6 @@
 #define MQTTCLIENT_QOS1 0
 #define MQTTCLIENT_QOS2 0
 
-#include "easy-connect.h"
 #include "MQTTNetwork.h"
 #include "MQTTmbed.h"
 #include "MQTTClient.h"
@@ -62,18 +61,26 @@ char messageBuffer[MESSAGE_BUFFER_SIZE];
 void handleMqttMessage(MQTT::MessageData& md);
 void handleButtonRise();
 
+#if defined(TARGET_WIO_3G) || defined(TARGET_WIO_BG96)
+DigitalOut GrovePower(GRO_POWR, 1);
+#undef BUTTON1
+#define BUTTON1 D20
+#endif
+
+InterruptIn btn1(BUTTON1);
 
 int main(int argc, char* argv[])
 {
+    wait_ms(500);
     mbed_trace_init();
     
     const float version = 0.1;
 
     NetworkInterface* network = NULL;
 
-    DigitalOut led_red(LED_RED, LED_OFF);
-    DigitalOut led_green(LED_GREEN, LED_OFF);
-    DigitalOut led_blue(LED_BLUE, LED_OFF);
+    DigitalOut led_red(LED1, LED_OFF);
+    DigitalOut led_green(LED2, LED_OFF);
+    DigitalOut led_blue(LED3, LED_OFF);
 
     printf("Mbed to Watson IoT : version is %.2f\r\n", version);
     printf("\r\n");
@@ -83,18 +90,22 @@ int main(int argc, char* argv[])
 
     printf("Opening network interface...\r\n");
     {
-        network = easy_connect(true);    // If true, prints out connection details.
+        network = NetworkInterface::get_default_instance();
         if (!network) {
             printf("Unable to open network interface.\r\n");
             return -1;
         }
+        network->connect();
+        const char *ip = network->get_ip_address();
+        printf("IP address: %s\n", ip ? ip : "None");
     }
     printf("Network interface opened successfully.\r\n");
     printf("\r\n");
 
     // sync the real time clock (RTC)
     NTPClient ntp(network);
-    ntp.set_server("time.google.com", 123);
+    char server_uri[] = "time.google.com";
+    ntp.set_server(server_uri, 123);
     time_t now = ntp.get_timestamp();
     set_time(now);
     printf("Time is now %s", ctime(&now));
@@ -130,7 +141,6 @@ int main(int argc, char* argv[])
 
     const char* username = "use-token-auth";
     std::string cid = std::string("d:") + ORG_ID + ":" + DEVICE_TYPE + ":" + DEVICE_ID;
-
 
     /* Establish a MQTT connection. */
     MQTT::Client<MQTTNetwork, Countdown, MQTT_MAX_PACKET_SIZE, MQTT_MAX_CONNECTIONS>* mqttClient = NULL;
@@ -173,7 +183,6 @@ int main(int argc, char* argv[])
     printf("\r\n");
 
     // Enable button 1 for publishing a message.
-    InterruptIn btn1 = InterruptIn(BUTTON1);
     btn1.rise(handleButtonRise);
     
     printf("To send a packet, push the button 1 on your board.\r\n");
