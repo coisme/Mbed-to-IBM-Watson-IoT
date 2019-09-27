@@ -165,8 +165,8 @@ int main(int argc, char* argv[])
     // Network initialization done. Turn off the green LED
     led_green = LED_OFF;
 
-    const char* mqtt_topic_pub = "iot-2/evt/start/fmt/text";
-    const char* mqtt_topic_sub = "iot-2/cmd/myevt/fmt/text";
+    const char* mqtt_topic_pub = "iot-2/evt/myevt/fmt/text";
+    const char* mqtt_topic_sub = "iot-2/cmd/mycmd/fmt/text";
 
     /* Subscribe a topic. */
     bool isSubscribed = false;
