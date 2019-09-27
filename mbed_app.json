@@ -1,60 +1,49 @@
 {
     "macros": [
+        "MBED_CONF_APP_MAIN_STACK_SIZE=4096",
+        "MBED_TRACE_MAX_LEVEL=TRACE_LEVEL_INFO"
     ],
-    "config": {
-        "main-stack-size": {
-            "value": 8192
-        },
-        "network-interface":{
-            "help": "options are ETHERNET, WIFI_ESP8266, WIFI_ODIN, WIFI_RTW, MESH_LOWPAN_ND, MESH_THREAD, CELLULAR_ONBOARD",
-            "value": "ETHERNET"
-        },
-        "mesh_radio_type": {
-            "help": "options are ATMEL, MCR20",
-            "value": "ATMEL"
-        },
-        "esp8266-tx": {
-            "help": "Pin used as TX (connects to ESP8266 RX)",
-            "value": "D1"
-        },
-        "esp8266-rx": {
-            "help": "Pin used as RX (connects to ESP8266 TX)",
-            "value": "D0"
-        },
-        "wifi-ssid": {
-            "value": "\"SSID\""
-        },
-        "wifi-password": {
-            "value": "\"PASSWORD\""
-        },
-        "esp8266-debug": {
-            "value": null
-        }
-    },
     "target_overrides": {
         "*": {
-            "target.features_add": ["NANOSTACK", "LOWPAN_ROUTER", "COMMON_PAL"],
-            "mbed-mesh-api.6lowpan-nd-channel-page": 0,
-            "mbed-mesh-api.6lowpan-nd-channel": 12,
-            "mbed-trace.enable": 0,
-            "tls-socket.debug-level": 0,
-            "platform.stdio-baud-rate": 115200,
-            "platform.stdio-convert-newlines": true
-           },
+            "mbed-trace.enable"                 : 0,
+            "platform.stdio-baud-rate"          : 115200,
+            "platform.stdio-convert-newlines"   : true,
+            "platform.default-serial-baud-rate" : 115200,
+            "platform.stdio-buffered-serial"    : true,
+            "nsapi.default-wifi-security"       : "WPA_WPA2",
+            "nsapi.default-wifi-ssid"           : "\"SSID\"",
+            "nsapi.default-wifi-password"       : "\"PASSWORD\"",
+            "nsapi.default-cellular-plmn"       : 0,
+            "nsapi.default-cellular-apn"        : "\"soracom.io\"",
+            "nsapi.default-cellular-username"   : "\"sora\"",
+            "nsapi.default-cellular-password"   : "\"sora\""
+        },
+        "WIO_3G": {
+            "target.device_has_remove"          : ["SERIAL_FC"],
+            "target.features_add"               : ["LWIP"],
+            "lwip.ipv4-enabled"                 : true,
+            "lwip.ethernet-enabled"             : false,
+            "lwip.ppp-enabled"                  : true,
+            "lwip.tcp-enabled"                  : true,
+            "cellular.use-apn-lookup"           : false,
+            "cellular.debug-at"                 : false
+        },
+        "WIO_BG96": {
+            "target.features_add"               : ["LWIP"],
+            "lwip.ipv4-enabled"                 : true,
+            "lwip.ethernet-enabled"             : false,
+            "lwip.ppp-enabled"                  : true,
+            "lwip.tcp-enabled"                  : true,
+            "cellular.use-apn-lookup"           : false,
+            "cellular.debug-at"                 : false,
+            "nsapi.default-cellular-plmn"       : "\"44052\""
+        },
         "RZ_A1H": {
             "target.macros_add": ["MBEDTLS_TEST_NULL_ENTROPY", "MBEDTLS_NO_DEFAULT_ENTROPY_SOURCES"]
-           },
-        "HEXIWEAR": {
-            "esp8266-tx": "PTD3",
-            "esp8266-rx": "PTD2"
         },
-        "NUCLEO_F401RE": {
-            "esp8266-tx": "D8",
-            "esp8266-rx": "D2"
-        },
-        "NUCLEO_F411RE": {
-            "esp8266-tx": "D8",
-            "esp8266-rx": "D2"
+        "GR_LYCHEE": {
+            "target.components_add"                     : ["WIFI_ESP32"],
+            "target.network-default-interface-type"     : "WIFI"
         }
     }
 }

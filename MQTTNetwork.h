@@ -2,13 +2,12 @@
 #define _MQTTNETWORK_H_
 
 #include "NetworkInterface.h"
-
 #include "TLSSocket.h"
 
 class MQTTNetwork {
 public:
     MQTTNetwork(NetworkInterface* aNetwork) : network(aNetwork) {
-        socket = new TLSSocket(aNetwork);
+        socket = new TLSSocket();
     }
 
     ~MQTTNetwork() {
@@ -36,6 +35,7 @@ public:
             const char *ssl_cli_pem = NULL, const char *ssl_pk_pem = NULL) {        
         socket->set_root_ca_cert(ssl_ca_pem);
         socket->set_client_cert_key(ssl_cli_pem, ssl_pk_pem);
+        socket->open(network);
         return socket->connect(hostname, port);
     }
 

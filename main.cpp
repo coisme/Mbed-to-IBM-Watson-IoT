@@ -28,7 +28,6 @@
 #define MQTTCLIENT_QOS1 0
 #define MQTTCLIENT_QOS2 0
 
-#include "easy-connect.h"
 #include "MQTTNetwork.h"
 #include "MQTTmbed.h"
 #include "MQTTClient.h"
@@ -44,9 +43,14 @@
 #define TIME_JWT_EXP      (60*60*24)  // 24 hours (MAX)
 
 // LED on/off - This could be different among boards. 
+#if defined(TARGET_NUCLEO_F767ZI)
 // The following values do target the NUCLEO_F767ZI board.
 #define LED_ON  1    
 #define LED_OFF 0
+#else
+#define LED_ON  0    
+#define LED_OFF 1
+#endif
 
 #include <string>
 #include <map>
@@ -101,19 +105,32 @@ char messageBuffer[MESSAGE_BUFFER_SIZE];
 void handleMqttMessage(MQTT::MessageData& md);
 void handleButtonRise();
 
+#if defined(TARGET_WIO_3G) || defined(TARGET_WIO_BG96)
+DigitalOut GrovePower(GRO_POWR, 1);
+#undef BUTTON1
+#define BUTTON1 D20
+#endif
+
 int main(int argc, char* argv[])
 {
+    wait_ms(500);
     mbed_trace_init();
     
     const float version = 0.1;
 
     NetworkInterface* network = NULL;
-    
+
+#if defined(TARGET_NUCLEO_F767ZI)
     // The following values do target the NUCLEO_F767ZI board.
     // Reference : en.DM00244518.pdf
     DigitalOut led_green(LED1);
     DigitalOut led_blue(LED2);
     DigitalOut led_red(LED3);
+#else
+    DigitalOut led_red(LED1, LED_OFF);
+    DigitalOut led_green(LED2, LED_OFF);
+    DigitalOut led_blue(LED3, LED_OFF);
+#endif
 
     printf("Mbed to Watson IoT : version is %.2f\r\n", version);
     printf("\r\n");
@@ -123,12 +140,14 @@ int main(int argc, char* argv[])
 
     printf("Opening network interface...\r\n");
     {
-        network = easy_connect(true);    // If true, prints out connection details.
-        if (!network) 
-	{
+        network = NetworkInterface::get_default_instance();
+        if (!network) {
             printf("Unable to open network interface.\r\n");
             return -1;
         }
+        network->connect();
+        const char *ip = network->get_ip_address();
+        printf("IP address: %s\n", ip ? ip : "None");
     }
     printf("Network interface opened successfully.\r\n");
     printf("\r\n");
@@ -203,7 +222,6 @@ int main(int argc, char* argv[])
     // Network initialization done. Turn off the green LED
     led_green = LED_OFF;
 
-    // Corrected from testing observations.
     const char* mqtt_topic_pub = "iot-2/evt/myevt/fmt/text";
     const char* mqtt_topic_sub = "iot-2/cmd/mycmd/fmt/text";
 
