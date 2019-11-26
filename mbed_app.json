@@ -1,10 +1,12 @@
 {
     "macros": [
         "MBED_CONF_APP_MAIN_STACK_SIZE=4096",
-        "MBED_TRACE_MAX_LEVEL=TRACE_LEVEL_INFO"
+        "MBED_TRACE_MAX_LEVEL=TRACE_LEVEL_INFO",
+        "MBEDTLS_SHA1_C=1"
     ],
     "target_overrides": {
         "*": {
+            "target.features_add"               : ["NANOSTACK"],
             "mbed-trace.enable"                 : 0,
             "platform.stdio-baud-rate"          : 115200,
             "platform.stdio-convert-newlines"   : true,
@@ -14,9 +16,10 @@
             "nsapi.default-wifi-ssid"           : "\"SSID\"",
             "nsapi.default-wifi-password"       : "\"PASSWORD\"",
             "nsapi.default-cellular-plmn"       : 0,
-            "nsapi.default-cellular-apn"        : "\"soracom.io\"",
-            "nsapi.default-cellular-username"   : "\"sora\"",
-            "nsapi.default-cellular-password"   : "\"sora\""
+            "nsapi.default-cellular-apn"        : "\"APN\"",
+            "nsapi.default-cellular-username"   : "\"USERNAME\"",
+            "nsapi.default-cellular-password"   : "\"PASSWORD\"",
+            "mbed-mqtt.max-packet-size"         : "1024"
         },
         "WIO_3G": {
             "target.device_has_remove"          : ["SERIAL_FC"],
